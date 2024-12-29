@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lead Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .lead-form, .lead-table { margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .status-new { background-color: #fff3cd; }
+        .status-contacted { background-color: #cfe2ff; }
+        .status-interested { background-color: #d1e7dd; }
+        .status-closed { background-color: #f8d7da; }
+        input, select { padding: 5px; margin: 5px; }
+        button { 
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lead Tracker</h1>
+
+    <div class="lead-form">
+        <h2>Add New Lead</h2>
+        <form id="leadForm">
+            <input type="text" id="businessName" placeholder="Business Name" required>
+            <input type="text" id="contactName" placeholder="Contact Name">
+            <input type="tel" id="phone" placeholder="Phone Number">
+            <input type="email" id="email" placeholder="Email">
+            <select id="source">
+                <option value="Google Maps">Google Maps</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Yellow Pages">Yellow Pages</option>
+                <option value="Chamber of Commerce">Chamber of Commerce</option>
+                <option value="Referral">Referral</option>
+                <option value="Other">Other</option>
+            </select>
+            <select id="status">
+                <option value="New">New</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Interested">Interested</option>
+                <option value="Closed">Closed</option>
+            </select>
+            <button type="submit">Add Lead</button>
+        </form>
+    </div>
+
+    <div class="lead-table">
+        <h2>Lead List</h2>
+        <table id="leadTable">
+            <thead>
+                <tr>
+                    <th>Business Name</th>
+                    <th>Contact</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Added Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="leadTableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Load leads from localStorage
+        let leads = JSON.parse(localStorage.getItem('leads')) || [];
+
+        function addLead(e) {
+            e.preventDefault();
+            const lead = {
+                businessName: document.getElementById('businessName').value,
+                contactName: document.getElementById('contactName').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                source: document.getElementById('source').value,
+                status: document.getElementById('status').value,
+                date: new Date().toLocaleDateString(),
+                notes: []
+            };
+            leads.push(lead);
+            localStorage.setItem('leads', JSON.stringify(leads));
+            displayLeads();
+            e.target.reset();
+        }
+
+        function deleteLead(index) {
+            leads.splice(index, 1);
+            localStorage.setItem('leads', JSON.stringify(leads));
+            displayLeads();
+        }
+
+        function updateStatus(index, newStatus) {
+            leads[index].status = newStatus;
+            localStorage.setItem('leads', JSON.stringify(leads));
+            displayLeads();
+        }
+
+        function displayLeads() {
+            const tbody = document.getElementById('leadTableBody');
+            tbody.innerHTML = '';
+            leads.forEach((lead, index) => {
+                const tr = document.createElement('tr');
+                tr.className = `status-${lead.status.toLowerCase()}`;
+                tr.innerHTML = `
+                    <td>${lead.businessName}</td>
+                    <td>${lead.contactName}</td>
+                    <td>${lead.phone}</td>
+                    <td>${lead.email}</td>
+                    <td>${lead.source}</td>
+                    <td>
+                        <select onchange="updateStatus(${index}, this.value)">
+                            <option value="New" ${lead.status === 'New' ? 'selected' : ''}>New</option>
+                            <option value="Contacted" ${lead.status === 'Contacted' ? 'selected' : ''}>Contacted</option>
+                            <option value="Interested" ${lead.status === 'Interested' ? 'selected' : ''}>Interested</option>
+                            <option value="Closed" ${lead.status === 'Closed' ? 'selected' : ''}>Closed</option>
+                        </select>
+                    </td>
+                    <td>${lead.date}</td>
+                    <td>
+                        <button onclick="deleteLead(${index})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('leadForm').addEventListener('submit', addLead);
+        displayLeads();
+    </script>
+</body>
+</html>
